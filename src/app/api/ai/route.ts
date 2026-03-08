@@ -1,8 +1,7 @@
 import Groq from "groq-sdk";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type SiteContext = {
   salesCount?: number;
@@ -20,12 +19,28 @@ type SiteContext = {
 
 export async function POST(req: Request) {
   try {
+    const apiKey = process.env.GROQ_API_KEY;
+
+    if (!apiKey) {
+      return Response.json(
+        { reply: "GROQ_API_KEY manquante." },
+        { status: 500 }
+      );
+    }
+
+    const groq = new Groq({
+      apiKey,
+    });
+
     const body = await req.json();
     const message = body.message;
     const context = (body.context || {}) as SiteContext;
 
     if (!message || typeof message !== "string") {
-      return Response.json({ reply: "Message invalide." }, { status: 400 });
+      return Response.json(
+        { reply: "Message invalide." },
+        { status: 400 }
+      );
     }
 
     const contextBlock = `
